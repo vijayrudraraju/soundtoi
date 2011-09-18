@@ -1,4 +1,4 @@
-/* add styles here */
+/* default couchapp css */
 
 body {
   font:1em Helvetica, sans-serif;
@@ -72,4 +72,14 @@ div.avatar img {
 
 #items ul {
   list-style: none;
+}
+
+/* domain specific css */
+
+canvas {
+    position:absolute;
+}
+#firstCanvas {
+    left:0px;
+    top:0px;
 }

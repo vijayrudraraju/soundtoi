@@ -1,29 +1,125 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>My New CouchApp</title>
-    <link rel="stylesheet" href="style/main.css" type="text/css">
+      <title>toimawb</title>
+      <link rel="stylesheet" href="style/main.css" type="text/css">
   </head>
   <body>
-    <div id="account"></div>
+      <canvas id="firstCanvas"></canvas>
+      <!--<div id="account"></div>
 
-    <h1>Generated CouchApp</h1>
+      <h1>Generated CouchApp</h1>
 
-    <div id="profile"></div>
-    <div id="items"></div>
+      <div id="profile"></div>
+      <div id="items"></div>
 
-    <div id="sidebar">
-      <p>Edit welcome message.</p>
-      <p>Ideas: You could easily turn this into a photo sharing app, or a grocery list, or a chat room.</p>
-    </div>
+      <div id="sidebar">
+          <p>Edit welcome message.</p>
+          <p>Ideas: You could easily turn this into a photo sharing app, or a grocery list, or a chat room.</p>
+      </div>-->
   </body>
   <script src="vendor/couchapp/loader.js"></script>
   <script type="text/javascript" charset="utf-8">
-    $.couch.app(function(app) {
+      var globalP;
+
+      var initialized = false;
+
+      var screenWidth = 320;
+      var screenHeight = 356;
+
+      var controlSize = Math.round(screenWidth/2);
+
+      var squareSize = Math.round(controlSize/2);
+      var smallSquareSize = Math.round(squareSize/2);
+
+      var circleSize = controlSize;
+      var smallCircleSize = Math.round(circleSize/2);
+      var smallestCircleSize = Math.round(smallCircleSize/2);
+
+      var smallCirclePosition = 0; 
+      var smallestCirclePosition = 0; 
+
+      /*
+      $.couch.app(function(app) {
       $("#account").evently("account", app);
       $("#profile").evently("profile", app);
       $.evently.connect("#account","#profile", ["loggedIn","loggedOut"]);
       $("#items").evently("items", app);
-    });
+      });
+      */
+      $(document).ready(function() {
+              globalP = new Processing($('#firstCanvas')[0],globalP);
+              });
+
+function globalP(p) {
+    p.draw = function() {
+        p.noStroke();
+        p.fill(80,80,80);
+
+        p.rect(0,screenHeight-controlSize,
+                controlSize,controlSize);
+        p.rect(controlSize,screenHeight-controlSize,
+                controlSize,controlSize);
+
+        p.fill(160,160,160);
+        p.rect(0,screenHeight-controlSize,
+                squareSize,squareSize);
+        p.fill(120,120,120);
+        p.rect(squareSize,screenHeight-controlSize,
+                squareSize,squareSize);
+        p.fill(120,120,120);
+        p.rect(0,screenHeight-controlSize+squareSize,
+                squareSize,squareSize);
+        p.fill(160,160,160);
+        p.rect(squareSize,screenHeight-controlSize+squareSize,
+                squareSize,squareSize);
+
+        p.fill(220,220,220);
+        p.rect(0,screenHeight-controlSize,
+                smallSquareSize,smallSquareSize);
+        p.fill(200,200,200);
+        p.rect(smallSquareSize,screenHeight-controlSize,
+                smallSquareSize,smallSquareSize);
+        p.fill(200,200,200);
+        p.rect(0,screenHeight-controlSize+smallSquareSize,
+                smallSquareSize,smallSquareSize);
+        p.fill(220,220,220);
+        p.rect(smallSquareSize,screenHeight-controlSize+smallSquareSize,
+                smallSquareSize,smallSquareSize);
+
+        var smallCircleCorrY = Math.sin(2*Math.PI/360*smallCirclePosition)*smallCircleSize/2;
+        var smallCircleCorrX = Math.cos(2*Math.PI/360*smallCirclePosition)*smallCircleSize/2;
+        var smallestCircleCorrY = Math.sin(2*Math.PI/360*smallestCirclePosition)*smallestCircleSize/2;
+        var smallestCircleCorrX = Math.cos(2*Math.PI/360*smallestCirclePosition)*smallestCircleSize/2;
+
+        p.fill(120,0,0)
+        p.ellipse(controlSize+smallCircleSize,screenHeight-smallCircleSize,
+                circleSize,circleSize);
+        p.fill(190,0,0)
+        p.ellipse(controlSize+smallCircleSize+smallCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY,
+                smallCircleSize,smallCircleSize);
+        p.fill(255,0,0)
+        p.ellipse(controlSize+smallCircleSize+smallCircleCorrX+smallestCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY+smallestCircleCorrY,
+                smallestCircleSize,smallestCircleSize);
+
+        smallCirclePosition++;
+        smallestCirclePosition += 2;
+
+        /*
+        if(!initialized) {
+            initialized = true;
+            p.noLoop();
+        }
+        */
+    };
+    p.setup = function() {
+        //p.println(p.PFont.list());
+
+        p.size(screenWidth,screenHeight);
+        var font = p.loadFont("monospace");
+        p.textFont(font);
+        p.background(0);
+	};
+}
   </script>
 </html>
