@@ -20,9 +20,13 @@
   </body>
   <script src="vendor/couchapp/loader.js"></script>
   <script type="text/javascript" charset="utf-8">
-      var globalP;
+      var gP;
+
+      /* global variables */
 
       var initialized = false;
+
+      /* drawing constants */
 
       var screenWidth = 320;
       var screenHeight = 356;
@@ -36,23 +40,58 @@
       var smallCircleSize = Math.round(circleSize/2);
       var smallestCircleSize = Math.round(smallCircleSize/2);
 
+      /* drawing variables */
+
       var smallCirclePosition = 0; 
       var smallestCirclePosition = 0; 
 
-      /*
-      $.couch.app(function(app) {
-      $("#account").evently("account", app);
-      $("#profile").evently("profile", app);
-      $.evently.connect("#account","#profile", ["loggedIn","loggedOut"]);
-      $("#items").evently("items", app);
-      });
-      */
+      /* 4-tree data structure */
+      function FourTree() {
+        this.raw = {};
+        this.raw[0] = {state:0};
+        this.raw[1] = {state:0};
+        this.raw[2] = {state:0};
+        this.raw[3] = {state:0};
+
+        this.position = [];
+
+        this.set = function(localPosition, newState) {
+            var pointer = this.raw;
+            for(var i=0;i<this.position.length;i++) {
+                pointer = pointer[this.position[i]];
+            }
+            pointer.state = newState;
+        }
+        this.get = function(localPosition) {
+            var pointer = this.raw;
+            for(var i=0;i<this.position.length;i++) {
+                pointer = pointer[this.position[i]];
+            }
+        }
+        this.descend = function(localPosition) {
+            this.position.push(localPosition); 
+        }
+        this.ascend = function() {
+            if(this.position.length > 0) {
+                this.position.pop();
+            } else {
+                this.position = [];
+                this.raw[0] = this.raw;
+                this.raw[1] = {state:0};
+                this.raw[2] = {state:0};
+                this.raw[3] = {state:0};
+            }
+        }
+      }
+
       $(document).ready(function() {
-              globalP = new Processing($('#firstCanvas')[0],globalP);
+              gP = new Processing($('#firstCanvas')[0],innerLoop);
+              gP.externals.sketch.options.globalKeyEvents = true;
+              gP.externals.sketch.options.pauseOnBlur = true;
               });
 
-function globalP(p) {
-    p.draw = function() {
+function innerLoop(p) {
+    function drawSquareControl() {
         p.noStroke();
         p.fill(80,80,80);
 
@@ -86,7 +125,8 @@ function globalP(p) {
         p.fill(220,220,220);
         p.rect(smallSquareSize,screenHeight-controlSize+smallSquareSize,
                 smallSquareSize,smallSquareSize);
-
+    }
+    function drawCircleControl() {
         var smallCircleCorrY = Math.sin(2*Math.PI/360*smallCirclePosition)*smallCircleSize/2;
         var smallCircleCorrX = Math.cos(2*Math.PI/360*smallCirclePosition)*smallCircleSize/2;
         var smallestCircleCorrY = Math.sin(2*Math.PI/360*smallestCirclePosition)*smallestCircleSize/2;
@@ -104,7 +144,10 @@ function globalP(p) {
 
         smallCirclePosition++;
         smallestCirclePosition += 2;
-
+    }
+    p.draw = function() {
+        drawSquareControl();
+        drawCircleControl();
         /*
         if(!initialized) {
             initialized = true;
@@ -114,12 +157,19 @@ function globalP(p) {
     };
     p.setup = function() {
         //p.println(p.PFont.list());
-
         p.size(screenWidth,screenHeight);
         var font = p.loadFont("monospace");
         p.textFont(font);
         p.background(0);
 	};
 }
+      /*
+      $.couch.app(function(app) {
+      $("#account").evently("account", app);
+      $("#profile").evently("profile", app);
+      $.evently.connect("#account","#profile", ["loggedIn","loggedOut"]);
+      $("#items").evently("items", app);
+      });
+      */
   </script>
 </html>
