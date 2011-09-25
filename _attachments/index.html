@@ -177,7 +177,7 @@ function innerLoop(p) {
     function drawSquareStack() {
         /* background */
         p.noStroke();
-        p.fill(40,40,40);
+        p.fill(70,70,70);
         p.rect(0,0,stackWidth,stackHeight);
         p.fill(0,0,0);
         p.rect(0,stackWidth*3,stackWidth,stackHeight-(stackWidth*3));
@@ -213,6 +213,7 @@ function innerLoop(p) {
             p.strokeWeight(1);
         }
 
+        p.stroke(255,255,255);
         for(var i=0;i<4;i++) {
             if(i==0) {
                 offsetX = 0;
@@ -363,7 +364,7 @@ function innerLoop(p) {
                 controlSize,controlSize);
 
         /* foreground */
-        p.stroke(255,0,0);
+        p.stroke(255,255,255);
         p.strokeWeight(2);
 
         if(gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line0']) {
@@ -383,7 +384,7 @@ function innerLoop(p) {
     function drawCircleStack() {
         /* background */
         p.noStroke();
-        p.fill(60,60,60);
+        p.fill(70,70,70);
         p.rect(screenWidth-stackWidth,0,stackWidth,stackHeight);
         p.fill(0,0,0);
         p.rect(screenWidth-stackWidth,stackWidth*3,stackWidth,stackHeight-(stackWidth*3));
@@ -416,7 +417,7 @@ function innerLoop(p) {
     }
     function drawCircleControl() {
         p.noStroke();
-        p.fill(80,80,80);
+        p.fill(70,70,70);
         p.rect(controlSize,screenHeight-controlSize,
                 controlSize,controlSize);
 
@@ -428,7 +429,7 @@ function innerLoop(p) {
         var innerLineY = Math.cos(2*Math.PI/360*linePosition)*smallestCircleSize/2;
 
         p.stroke(0);
-        p.fill(80,80,80);
+        p.fill(0,0,0);
         p.ellipse(controlSize+smallCircleSize,screenHeight-smallCircleSize,
                 circleSize,circleSize);
         p.noStroke();
@@ -439,7 +440,7 @@ function innerLoop(p) {
         p.ellipse(controlSize+smallCircleSize+smallCircleCorrX+smallestCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY+smallestCircleCorrY,
                 smallestCircleSize,smallestCircleSize);
 
-        p.stroke(80,80,80);
+        p.stroke(255,255,255);
         p.line(controlSize+smallCircleSize+smallCircleCorrX+smallestCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY+smallestCircleCorrY,
                 controlSize+smallCircleSize+smallCircleCorrX+smallestCircleCorrX-innerLineX,
                 screenHeight-smallCircleSize+smallCircleCorrY+smallestCircleCorrY+innerLineY);
