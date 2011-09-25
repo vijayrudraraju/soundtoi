@@ -12,9 +12,16 @@
   <script type="text/javascript" charset="utf-8">
       /* global data processing */
   var gTree;
+
+  /* global square data */
   var gTreeI = 0;
   var gTreeJ = 0;
   var gTreeK = 0;
+
+  /* global circle data */
+  var gCircleVel0 = 0.0;
+  var gCircleVel1 = 0.2;
+  var gCircleVel2 = 0.4;
 
   /* global video processing */
   var gP;
@@ -165,6 +172,7 @@ function innerLoop(p) {
     /* drawing variables */
     var smallCirclePosition = 0; 
     var smallestCirclePosition = 0; 
+    var linePosition = 0; 
 
     function drawSquareStack() {
         /* background */
@@ -375,11 +383,24 @@ function innerLoop(p) {
         p.rect(screenWidth-stackWidth,stackWidth*3,stackWidth,stackHeight-(stackWidth*3));
 
         /* foreground */
+        p.strokeWeight(3);
+        p.stroke(0);
+        p.fill(255);
         var offsetY = 0;
+        var lineLength = stackWidth-(20*2);
         for(var n=0;n<3;n++) {
             offsetY = stackWidth*n;
-            p.fill(255,0,0);
-            p.ellipse(screenWidth-stackSquareSize,stackSquareSize+offsetY,stackWidth,stackWidth);
+            //p.ellipse(screenWidth-stackSquareSize,stackSquareSize+offsetY,stackWidth,stackWidth);
+            p.stroke(0);
+            p.line(screenWidth-stackWidth+20,offsetY+(stackWidth/2),screenWidth-20,offsetY+(stackWidth/2));
+            p.noStroke();
+            if(n==0) {
+                p.ellipse((gCircleVel0*lineLength)+screenWidth-stackWidth+20,offsetY+(stackWidth/2),30,30);
+            } else if(n==1) {
+                p.ellipse((gCircleVel1*lineLength)+screenWidth-stackWidth+20,offsetY+(stackWidth/2),30,30);
+            } else {
+                p.ellipse((gCircleVel2*lineLength)+screenWidth-stackWidth+20,offsetY+(stackWidth/2),30,30);
+            }
         }
     }
     function drawCircleControl() {
@@ -392,51 +413,78 @@ function innerLoop(p) {
         var smallCircleCorrX = Math.cos(2*Math.PI/360*smallCirclePosition)*smallCircleSize/2;
         var smallestCircleCorrY = Math.sin(2*Math.PI/360*smallestCirclePosition)*smallestCircleSize/2;
         var smallestCircleCorrX = Math.cos(2*Math.PI/360*smallestCirclePosition)*smallestCircleSize/2;
+        var innerLineX = Math.sin(2*Math.PI/360*linePosition)*smallestCircleSize/2;
+        var innerLineY = Math.cos(2*Math.PI/360*linePosition)*smallestCircleSize/2;
 
-        p.fill(120,0,0)
-            p.ellipse(controlSize+smallCircleSize,screenHeight-smallCircleSize,
-                    circleSize,circleSize);
-        p.fill(190,0,0)
-            p.ellipse(controlSize+smallCircleSize+smallCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY,
-                    smallCircleSize,smallCircleSize);
-        p.fill(255,0,0)
-            p.ellipse(controlSize+smallCircleSize+smallCircleCorrX+smallestCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY+smallestCircleCorrY,
-                    smallestCircleSize,smallestCircleSize);
+        p.fill(80,80,80);
+        p.ellipse(controlSize+smallCircleSize,screenHeight-smallCircleSize,
+                circleSize,circleSize);
+        p.fill(190,0,0);
+        p.ellipse(controlSize+smallCircleSize+smallCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY,
+                smallCircleSize,smallCircleSize);
+        p.fill(255,0,0);
+        p.ellipse(controlSize+smallCircleSize+smallCircleCorrX+smallestCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY+smallestCircleCorrY,
+                smallestCircleSize,smallestCircleSize);
+
+        p.stroke(80,80,80);
+        p.line(controlSize+smallCircleSize+smallCircleCorrX+smallestCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY+smallestCircleCorrY,
+                controlSize+smallCircleSize+smallCircleCorrX+smallestCircleCorrX-innerLineX,
+                screenHeight-smallCircleSize+smallCircleCorrY+smallestCircleCorrY+innerLineY);
 
         smallCirclePosition++;
         smallestCirclePosition += 2;
+        linePosition++;
     }
     function calcDist(x1,x2,y1,y2) {
         return Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2));
     }
 
-    innerLoop.pressX = 0;
-    innerLoop.pressY = 0;
-    innerLoop.releaseX = 0;
-    innerLoop.releaseY = 0;
+    innerLoop.pressX0 = 0;
+    innerLoop.pressY0 = 0;
+    innerLoop.pressX1 = 0;
+    innerLoop.pressY1 = 0;
+    innerLoop.pressX1 = 0;
+    innerLoop.pressY1 = 0;
     p.mousePressed = function() {
-        innerLoop.pressX = p.mouseX; 
-        innerLoop.pressY = p.mouseY; 
+        var lineLength = stackWidth-(20*2);
+
+        if(p.mouseX>(gCircleVel0*lineLength)+screenWidth-stackWidth+20-15 &&
+                p.mouseX<(gCircleVel0*lineLength)+screenWidth-stackWidth+20+15 &&
+                p.mouseY>stackWidth/2-15 &&
+                p.mouseY<stackWidth/2+15) {
+            innerLoop.pressX0 = p.mouseX;
+            innerLoop.pressY0 = p.mouseY;
+            console.log("click slider 0");
+        }
+
+        if(p.mouseX>(gCircleVel1*lineLength)+screenWidth-stackWidth+20-15 &&
+                p.mouseX<(gCircleVel1*lineLength)+screenWidth-stackWidth+20+15 &&
+                p.mouseY>stackWidth+(stackWidth/2)-15 &&
+                p.mouseY<stackWidth+(stackWidth/2)+15) {
+            innerLoop.pressX0 = p.mouseX;
+            innerLoop.pressY0 = p.mouseY;
+            console.log("click slider 1");
+        }
+
+        if(p.mouseX>(gCircleVel2*lineLength)+screenWidth-stackWidth+20-15 &&
+                p.mouseX<(gCircleVel2*lineLength)+screenWidth-stackWidth+20+15 &&
+                p.mouseY>(stackWidth*2)+(stackWidth/2)-15 &&
+                p.mouseY<(stackWidth*2)+(stackWidth/2)+15) {
+            innerLoop.pressX0 = p.mouseX;
+            innerLoop.pressY0 = p.mouseY;
+            console.log("click slider 2");
+        }
     };
     p.mouseReleased = function() {
-        innerLoop.releaseX = p.mouseX; 
-        innerLoop.releaseY = p.mouseY; 
+        innerLoop.pressX0 = -1; 
+        innerLoop.pressY0 = -1;
+        innerLoop.pressX1 = -1;
+        innerLoop.pressY1 = -1;
+        innerLoop.pressX2 = -1;
+        innerLoop.pressY2 = -1;
+    }
+    p.mouseMoved = function() {
 
-        var pressSector = -1;
-
-        if(innerLoop.pressX < squareSize) {
-            if(innerLoop.pressY > screenHeight-controlSize+squareSize) {
-                pressSector = 2;
-            } else if(innerLoop.pressY > screenHeight-controlSize) {
-                pressSector = 0;
-            }
-        } else if(innerLoop.pressX < squareSize*2) {
-            if(innerLoop.pressY > screenHeight-controlSize+squareSize) {
-                pressSector = 3;
-            } else if(innerLoop.pressY > screenHeight-controlSize) {
-                pressSector = 1;
-            }
-        }
     }
 
     p.mouseClicked = function() {
