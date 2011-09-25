@@ -347,6 +347,12 @@ function innerLoop(p) {
                 p.line(stackSquareSize+offsetX,0+offsetY,0+offsetX,stackSquareSize+offsetY);
             }
         }
+
+        p.strokeWeight(3);
+        p.stroke(0);
+        p.line(0,stackWidth,stackWidth,stackWidth);
+        p.line(0,stackWidth*2,stackWidth,stackWidth*2);
+        p.line(0,stackWidth*2,stackWidth,stackWidth*2);
     }
 
     function drawSquareControl() {
@@ -402,6 +408,11 @@ function innerLoop(p) {
                 p.ellipse((gCircleVel2*lineLength)+screenWidth-stackWidth+20,offsetY+(stackWidth/2),30,30);
             }
         }
+
+        p.stroke(0);
+        p.line(screenWidth,stackWidth,screenWidth-stackWidth,stackWidth);
+        p.line(screenWidth,stackWidth*2,screenWidth-stackWidth,stackWidth*2);
+        p.line(screenWidth,stackWidth*2,screenWidth-stackWidth,stackWidth*2);
     }
     function drawCircleControl() {
         p.noStroke();
@@ -421,7 +432,7 @@ function innerLoop(p) {
         p.ellipse(controlSize+smallCircleSize,screenHeight-smallCircleSize,
                 circleSize,circleSize);
         p.noStroke();
-        p.fill(190,0,0);
+        p.fill(0,0,255);
         p.ellipse(controlSize+smallCircleSize+smallCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY,
                 smallCircleSize,smallCircleSize);
         p.fill(255,0,0);
