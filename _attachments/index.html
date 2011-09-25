@@ -6,138 +6,151 @@
   </head>
   <body>
       <canvas id="firstCanvas"></canvas>
-      <!--<div id="account"></div>
-
-      <h1>Generated CouchApp</h1>
-
-      <div id="profile"></div>
-      <div id="items"></div>
-
-      <div id="sidebar">
-          <p>Edit welcome message.</p>
-          <p>Ideas: You could easily turn this into a photo sharing app, or a grocery list, or a chat room.</p>
-      </div>-->
   </body>
   <script src="vendor/couchapp/loader.js"></script>
+
   <script type="text/javascript" charset="utf-8">
-      var gP;
-      var gTree;
+      /* global data processing */
+  var gTree;
+  var gTreeI = 0;
+  var gTreeJ = 0;
+  var gTreeK = 0;
 
-      /* global variables */
+  /* global video processing */
+  var gP;
 
-      var initialized = false;
+  /* global audio processing */
+  var gA;
+  var gNode;
+  var gWave;
 
-      /* 4-tree data structure */
-      function FourTree() {
-        this.raw = {};
-        this.raw[0] = {state:false};
-        this.raw[0][0] = {state:false};
-        this.raw[0][1] = {state:false};
-        this.raw[0][2] = {state:false};
-        this.raw[0][3] = {state:false};
-        this.raw[1] = {state:false};
-        this.raw[1][0] = {state:false};
-        this.raw[1][1] = {state:false};
-        this.raw[1][2] = {state:false};
-        this.raw[1][3] = {state:false};
-        this.raw[2] = {state:false};
-        this.raw[2][0] = {state:false};
-        this.raw[2][1] = {state:false};
-        this.raw[2][2] = {state:false};
-        this.raw[2][3] = {state:false};
-        this.raw[3] = {state:false};
-        this.raw[3][0] = {state:false};
-        this.raw[3][1] = {state:false};
-        this.raw[3][2] = {state:false};
-        this.raw[3][3] = {state:false};
+  /* global variables */
+  var initialized = false;
 
-        this.position = [];
-
-        this.validatePos = function(pos) {
-            if(pos > 3) {
-                pos = 3;    
-            }
-            return pos;
-        }
-        this.getLocalPointer = function() {
-            var pointer = this.raw;
-            for(var i=0;i<this.position.length;i++) {
-                pointer = pointer[this.position[i]];
-            }
-            return pointer;
-        }
-
-        this.flipState = function(localPos) {
-            localPos = this.validatePos(localPos);
-            var pointer = this.getLocalPointer();
-
-            pointer[localPos]['state'] = !pointer[localPos]['state'];
-        }
-        this.getState = function(localPos) {
-            localPos = this.validatePos(localPos);
-            var pointer = this.getLocalPointer();
-
-            return pointer[localPos]['state'];
-        }
-        this.descend = function(localPos) {
-            localPos = this.validatePos(localPos);
-            var pointer = this.getLocalPointer();
-
-            if(pointer[localPos][0] == undefined) {
-                pointer[localPos][0][0] = {state:false}; 
-                pointer[localPos][0][1] = {state:false}; 
-                pointer[localPos][0][2] = {state:false}; 
-                pointer[localPos][0][3] = {state:false}; 
-                pointer[localPos][1][0] = {state:false}; 
-                pointer[localPos][1][1] = {state:false}; 
-                pointer[localPos][1][2] = {state:false}; 
-                pointer[localPos][1][3] = {state:false}; 
-                pointer[localPos][2][0] = {state:false}; 
-                pointer[localPos][2][1] = {state:false}; 
-                pointer[localPos][2][2] = {state:false}; 
-                pointer[localPos][2][3] = {state:false}; 
-                pointer[localPos][3][0] = {state:false}; 
-                pointer[localPos][3][1] = {state:false}; 
-                pointer[localPos][3][2] = {state:false}; 
-                pointer[localPos][3][3] = {state:false}; 
-            }
-            this.position.push(localPos); 
-        }
-        this.ascend = function() {
-            if(this.position.length > 0) {
-                this.position.pop();
-            } else {
-                this.position = [];
-                var oldRaw = jQuery.extend(true,{},this.raw);
-                this.raw = {};
-                this.raw[0] = oldRaw;
-                this.raw[0]['state'] = false;
-                this.raw[1] = {state:false};
-                this.raw[2] = {state:false};
-                this.raw[3] = {state:false};
-            }
-        }
+  /* 4-tree data structure */
+  function FourTree() {
+      this.raw = {};
+      for(var i=0;i<4;i++) {
+          //this.raw[i] = {state:{line0:0,line1:0,line2:0,line3:0}};
+          this.raw[i] = {};
+          for(var j=0;j<4;j++) {
+              //this.raw[i][j] = {state:{line0:0,line1:0,line2:0,line3:0}};
+              this.raw[i][j] = {};
+              for(var k=0;k<4;k++) {
+                  this.raw[i][j][k] = {state:{line0:0,line1:0,line2:0,line3:0}};
+              }
+          }
       }
 
-      $(document).ready(function() {
-              gTree = new FourTree();
-              gP = new Processing($('#firstCanvas')[0],innerLoop);
-              gP.externals.sketch.options.globalKeyEvents = true;
-              gP.externals.sketch.options.pauseOnBlur = true;
-              });
-        $('#firstCanvas').dblclick(function() {
-            console.log("double-click");
-                });
+      this.position = [];
+
+      this.validatePos = function(pos) {
+          if(pos > 3) {
+              pos = 3;    
+          }
+          return pos;
+      }
+      this.getLocalPointer = function() {
+          var pointer = this.raw;
+          for(var i=0;i<this.position.length;i++) {
+              pointer = pointer[this.position[i]];
+          }
+          return pointer;
+      }
+
+      this.cycleState = function(localPos) {
+          localPos = this.validatePos(localPos);
+          var pointer = this.getLocalPointer();
+
+          pointer[localPos]['state'] = !pointer[localPos]['state'];
+      }
+      this.getState = function(localPos) {
+          localPos = this.validatePos(localPos);
+          var pointer = this.getLocalPointer();
+
+          return pointer[localPos]['state'];
+      }
+      this.descend = function(localPos) {
+          localPos = this.validatePos(localPos);
+          var pointer = this.getLocalPointer();
+          this.position.push(localPos); 
+      }
+      this.ascend = function() {
+          if(this.position.length > 0) {
+              this.position.pop();
+          }
+      }
+  }
+
+var SineWave = function(context) {
+    var that = this;
+    this.x = 0; // initial sample number
+    this.context = context;
+
+    this.sample_rate = this.context.sampleRate;
+    this.frequency = 440;
+
+    this.node = context.createJavaScriptNode(2048,1,2);
+    this.node.onaudioprocess = function(e) { 
+        that.process(e)
+    };
+}
+SineWave.prototype.process = function(e) {
+    var data0 = e.outputBuffer.getChannelData(0);
+    var data1 = e.outputBuffer.getChannelData(1);
+    //var data1 = e.outputBuffer.getChannelData(1);
+    //var data = e.outputBuffer.getChannelData(0);
+
+    for(var i=0;i<data0.length;++i) {
+        //data0[i] = Math.sin(this.x);
+        //data1[i] = Math.sin(this.x);
+        data0[i] = Math.sin((this.x/this.sample_rate) * 2*Math.PI * this.frequency);
+        data1[i] = Math.sin((this.x/this.sample_rate) * 2*Math.PI * this.frequency);
+        //data0[i] = Math.sin(this.x / (this.sample_rate / 2 * Math.PI * this.frequency));
+        //data1[i] = Math.sin(this.x / (this.sample_rate / 2 * Math.PI * this.frequency));
+        this.x++;
+    }
+}
+SineWave.prototype.play = function() {
+    this.node.connect(this.context.destination);
+}
+SineWave.prototype.pause = function() {
+    this.node.disconnect();
+}
+
+$(document).ready(function() {
+        /* audio init */
+        gA = new webkitAudioContext();
+        gWave = new SineWave(gA);
+        //sinewave.play();
+
+        /* data init */
+        gTree = new FourTree();
+
+        /* visual init*/
+        gP = new Processing($('#firstCanvas')[0],innerLoop);
+        gP.externals.sketch.options.globalKeyEvents = true;
+        gP.externals.sketch.options.pauseOnBlur = true;
+        });
+$('#firstCanvas').dblclick(function() {
+        console.log("double-click");
+        });
 
 function innerLoop(p) {
-    var screenWidth = 320;
-    var screenHeight = 356;
+    //var screenWidth = 320;
+    //var screenHeight = 356;
+
+    var screenWidth = 640;
+    var screenHeight = 712;
 
     /* stack drawing constants */
     var stackWidth = Math.round((screenWidth-(screenHeight-(screenWidth/2)))/2);
     var stackHeight = Math.round(screenHeight-(screenWidth/2));
 
     var stackSquareSize = Math.round(stackWidth/2);
+    var stackSmallSquareSize = Math.round(stackSquareSize/2);
+    var stackSmallestSquareSize = Math.round(stackSmallSquareSize/2);
+    var stackBufferHeight = stackHeight-(stackWidth*3);
 
     /* control drawing constants */
     var controlSize = Math.round(screenWidth/2);
@@ -154,184 +167,219 @@ function innerLoop(p) {
     var smallestCirclePosition = 0; 
 
     function drawSquareStack() {
+        /* background */
         p.noStroke();
-
-        p.fill(0,0,0);
+        p.fill(40,40,40);
         p.rect(0,0,stackWidth,stackHeight);
-        p.rect(screenWidth-stackWidth,0,stackWidth,stackHeight);
+        p.fill(0,0,0);
+        p.rect(0,stackWidth*3,stackWidth,stackHeight-(stackWidth*3));
 
-        p.stroke(255,0,0);
-        //p.line(0,stackWidth,stackWidth-1,stackWidth);
-        //p.line(0,stackWidth*2,stackWidth-1,stackWidth*2);
-        //p.line(0,stackWidth*3,stackWidth-1,stackWidth*3);
-        p.noStroke();
-            
-        if(gTree.position.length == 0) {
-            return;
-        } else if(gTree.position.length < 2) {
-            if(gTree.raw[0]['state'] == false) {
-                p.fill(0,0,0);
+        /* foreground */
+        var offsetX = 0;
+        var offsetY = 0;
+
+        for(var n=0;n<3;n++) {
+            /* selection squares */
+            var quadrant = 0;
+            if(n==0) {
+                quadrant = gTreeI;
+            } else if(n==1) {
+                quadrant = gTreeJ;
             } else {
-                p.fill(255,255,255);
+                quadrant = gTreeK;
             }
-            if(gTree.position[0] == 0) {
-                p.fill(255,0,0);
-                if(gTree.raw[0]['state'] == false) {
-                    p.fill(63,0,0);
+
+            p.fill(0,0,150);
+            p.noStroke();
+            if(quadrant==0) {
+                p.rect(0,stackWidth*n,stackSquareSize,stackSquareSize);
+            } else if(quadrant==1) {
+                p.rect(stackSquareSize,stackWidth*n,stackSquareSize,stackSquareSize);
+            } else if(quadrant==2) {
+                p.rect(0,stackWidth*n+stackSquareSize,stackSquareSize,stackSquareSize);
+            } else {
+                p.rect(stackSquareSize,stackWidth*n+stackSquareSize,stackSquareSize,stackSquareSize);
+            }
+
+            p.stroke(255,0,0);
+            p.strokeWeight(1);
+        }
+
+        for(var i=0;i<4;i++) {
+            if(i==0) {
+                offsetX = 0;
+                offsetY = 0;
+            } else if(i==1) {
+                offsetX = stackSquareSize;
+                offsetY = 0;
+            } else if(i==2) {
+                offsetX = 0;
+                offsetY = stackSquareSize;
+            } else if(i==3) {
+                offsetX = stackSquareSize;
+                offsetY = stackSquareSize;
+            }
+
+            for(var j=0;j<4;j++) {
+                if(j==0) {
+                    offset2X = offsetX;
+                    offset2Y = offsetY;
+                } else if(j==1) {
+                    offset2X = offsetX+stackSmallSquareSize;
+                    offset2Y = offsetY;
+                } else if(j==2) {
+                    offset2X = offsetX;
+                    offset2Y = offsetY+stackSmallSquareSize;
+                } else if(j==3) {
+                    offset2X = offsetX+stackSmallSquareSize;
+                    offset2Y = offsetY+stackSmallSquareSize;
+                }
+
+                for(var k=0;k<4;k++) {
+                    if(k==0) {
+                        offset3X = offset2X;
+                        offset3Y = offset2Y;
+                    } else if(k==1) {
+                        offset3X = offset2X+stackSmallestSquareSize;
+                        offset3Y = offset2Y;
+                    } else if(k==2) {
+                        offset3X = offset2X;
+                        offset3Y = offset2Y+stackSmallestSquareSize;
+                    } else if(k==3) {
+                        offset3X = offset2X+stackSmallestSquareSize;
+                        offset3Y = offset2Y+stackSmallestSquareSize;
+                    }
+
+                    if(gTree.raw[i][j][k]['state']['line0']) {
+                        p.line(0+offset3X,(stackSmallestSquareSize/2)+offset3Y,stackSmallestSquareSize+offset3X,(stackSmallestSquareSize/2)+offset3Y);
+                    }
+                    if(gTree.raw[i][j][k]['state']['line1']) {
+                        p.line((stackSmallestSquareSize/2)+offset3X,0+offset3Y,(stackSmallestSquareSize/2)+offset3X,stackSmallestSquareSize+offset3Y);
+                    }
+                    if(gTree.raw[i][j][k]['state']['line2']) {
+                        p.line(0+offset3X,0+offset3Y,stackSmallestSquareSize+offset3X,stackSmallestSquareSize+offset3Y);
+                    }
+                    if(gTree.raw[i][j][k]['state']['line3']) {
+                        p.line(stackSmallestSquareSize+offset3X,0+offset3Y,0+offset3X,stackSmallestSquareSize+offset3Y);
+                    }
                 }
             }
-            p.rect(0,stackWidth*2,stackSquareSize,stackSquareSize);
-            if(gTree.raw[1]['state'] == false) {
-                p.fill(0,0,0);
-            } else {
-                p.fill(255,255,255);
+        }
+
+        for(var j=0;j<4;j++) {
+            if(j==0) {
+                offsetX = 0;
+                offsetY = stackWidth;
+            } else if(j==1) {
+                offsetX = stackSquareSize;
+                offsetY = stackWidth;
+            } else if(j==2) {
+                offsetX = 0;
+                offsetY = stackSquareSize+stackWidth;
+            } else if(j==3) {
+                offsetX = stackSquareSize;
+                offsetY = stackSquareSize+stackWidth;
             }
-            if(gTree.position[0] == 1) {
-                p.fill(255,0,0);
-                if(gTree.raw[1]['state'] == false) {
-                    p.fill(63,0,0);
+
+            for(var k=0;k<4;k++) {
+                if(k==0) {
+                    offset2X = offsetX;
+                    offset2Y = offsetY;
+                } else if(k==1) {
+                    offset2X = offsetX+stackSmallSquareSize;
+                    offset2Y = offsetY;
+                } else if(k==2) {
+                    offset2X = offsetX;
+                    offset2Y = offsetY+stackSmallSquareSize;
+                } else if(k==3) {
+                    offset2X = offsetX+stackSmallSquareSize;
+                    offset2Y = offsetY+stackSmallSquareSize;
+                }
+
+                if(gTree.raw[gTreeI][j][k]['state']['line0']) {
+                    p.line(0+offset2X,(stackSmallSquareSize/2)+offset2Y,stackSmallSquareSize+offset2X,(stackSmallSquareSize/2)+offset2Y);
+                }
+                if(gTree.raw[gTreeI][j][k]['state']['line1']) {
+                    p.line((stackSmallSquareSize/2)+offset2X,0+offset2Y,(stackSmallSquareSize/2)+offset2X,stackSmallSquareSize+offset2Y);
+                }
+                if(gTree.raw[gTreeI][j][k]['state']['line2']) {
+                    p.line(0+offset2X,0+offset2Y,stackSmallSquareSize+offset2X,stackSmallSquareSize+offset2Y);
+                }
+                if(gTree.raw[gTreeI][j][k]['state']['line3']) {
+                    p.line(stackSmallSquareSize+offset2X,0+offset2Y,0+offset2X,stackSmallSquareSize+offset2Y);
                 }
             }
-            p.rect(stackSquareSize,stackWidth*2,stackSquareSize,stackSquareSize);
-            if(gTree.raw[2]['state'] == false) {
-                p.fill(0,0,0);
-            } else {
-                p.fill(255,255,255);
+        }
+
+        for(var k=0;k<4;k++) {
+            if(k==0) {
+                offsetX = 0;
+                offsetY = stackWidth*2;
+            } else if(k==1) {
+                offsetX = stackSquareSize;
+                offsetY = stackWidth*2;
+            } else if(k==2) {
+                offsetX = 0;
+                offsetY = stackSquareSize+(stackWidth*2);
+            } else if(k==3) {
+                offsetX = stackSquareSize;
+                offsetY = stackSquareSize+(stackWidth*2);
             }
-            if(gTree.position[0] == 2) {
-                p.fill(255,0,0);
-                if(gTree.raw[2]['state'] == false) {
-                    p.fill(63,0,0);
-                }
+
+            if(gTree.raw[gTreeI][gTreeJ][k]['state']['line0']) {
+                p.line(0+offsetX,(stackSquareSize/2)+offsetY,stackSquareSize+offsetX,(stackSquareSize/2)+offsetY);
             }
-            p.rect(0,stackWidth*2+stackSquareSize,stackSquareSize,stackSquareSize);
-            if(gTree.raw[3]['state'] == false) {
-                p.fill(0,0,0);
-            } else {
-                p.fill(255,255,255);
+            if(gTree.raw[gTreeI][gTreeJ][k]['state']['line1']) {
+                p.line((stackSquareSize/2)+offsetX,0+offsetY,(stackSquareSize/2)+offsetX,stackSquareSize+offsetY);
             }
-            if(gTree.position[0] == 3) {
-                p.fill(255,0,0);
-                if(gTree.raw[3]['state'] == false) {
-                    p.fill(63,0,0);
-                }
+            if(gTree.raw[gTreeI][gTreeJ][k]['state']['line2']) {
+                p.line(0+offsetX,0+offsetY,stackSquareSize+offsetX,stackSquareSize+offsetY);
             }
-            p.rect(stackSquareSize,stackWidth*2+stackSquareSize,stackSquareSize,stackSquareSize);
+            if(gTree.raw[gTreeI][gTreeJ][k]['state']['line3']) {
+                p.line(stackSquareSize+offsetX,0+offsetY,0+offsetX,stackSquareSize+offsetY);
+            }
         }
     }
 
     function drawSquareControl() {
+        /* background */
         p.noStroke();
-        p.fill(80,80,80);
-
+        p.fill(0,0,150);
         p.rect(0,screenHeight-controlSize,
                 controlSize,controlSize);
 
-        if(gTree.getState(0) == false) {
-            p.fill(0,0,0);
-        } else {
-            p.fill(255,255,255);
-        }
-        p.rect(0,screenHeight-controlSize,
-                squareSize,squareSize);
-        if(gTree.getState(1) == false) {
-            p.fill(0,0,0);
-        } else {
-            p.fill(255,255,255);
-        }
-        p.rect(squareSize,screenHeight-controlSize,
-                squareSize,squareSize);
-        if(gTree.getState(2) == false) {
-            p.fill(0,0,0);
-        } else {
-            p.fill(255,255,255);
-        }
-        p.rect(0,screenHeight-controlSize+squareSize,
-                squareSize,squareSize);
-        if(gTree.getState(3) == false) {
-            p.fill(0,0,0);
-        } else {
-            p.fill(255,255,255);
-        }
-        p.rect(squareSize,screenHeight-controlSize+squareSize,
-                squareSize,squareSize);
+        /* foreground */
+        p.stroke(255,0,0);
+        p.strokeWeight(2);
 
-        for(var i=0;i<4;i++) {
-            var offsetX = 0;
-            var offsetY = 0;
-            if(i == 1) {
-                offsetX = squareSize; 
-            } else if(i == 2) {
-                offsetY = squareSize;
-            } else if(i == 3) {
-                offsetX = squareSize;
-                offsetY = squareSize;
-            }
+        if(gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line0']) {
+            p.line(0,screenHeight-squareSize,controlSize,screenHeight-squareSize);
+        }
+        if(gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line1']) {
+            p.line(squareSize,screenHeight-controlSize,squareSize,screenHeight);
+        }
+        if(gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line2']) {
+            p.line(0,screenHeight-controlSize,controlSize,screenHeight);
+        }
+        if(gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line3']) {
+            p.line(0,screenHeight,controlSize,screenHeight-controlSize);
+        }
+    }
 
-            if(gTree.getLocalPointer()[i][0] == undefined) {
-                continue;
-            }
+    function drawCircleStack() {
+        /* background */
+        p.noStroke();
+        p.fill(60,60,60);
+        p.rect(screenWidth-stackWidth,0,stackWidth,stackHeight);
+        p.fill(0,0,0);
+        p.rect(screenWidth-stackWidth,stackWidth*3,stackWidth,stackHeight-(stackWidth*3));
 
-            if(gTree.getLocalPointer()[i][0]['state'] == false) {
-                if(gTree.getLocalPointer()[i]['state'] == false) {
-                    p.fill(31,31,31);
-                } else {
-                    p.fill(191,191,191);
-                }
-            } else if(gTree.getLocalPointer()[i][0]['state'] != undefined) {
-                if(gTree.getLocalPointer()[i]['state'] == false) {
-                    p.fill(63,63,63);
-                } else {
-                    p.fill(223,223,223);
-                }
-            }
-            p.rect(0+offsetX,screenHeight-controlSize+offsetY,
-                    smallSquareSize,smallSquareSize);
-            if(gTree.getLocalPointer()[i][1]['state'] == false) {
-                if(gTree.getLocalPointer()[i]['state'] == false) {
-                    p.fill(31,31,31);
-                } else {
-                    p.fill(191,191,191);
-                }
-            } else if(gTree.getLocalPointer()[i][1]['state'] != undefined) {
-                if(gTree.getLocalPointer()[i]['state'] == false) {
-                    p.fill(63,63,63);
-                } else {
-                    p.fill(223,223,223);
-                }
-            }
-            p.rect(smallSquareSize+offsetX,screenHeight-controlSize+offsetY,
-                    smallSquareSize,smallSquareSize);
-            if(gTree.getLocalPointer()[i][2]['state'] == false) {
-                if(gTree.getLocalPointer()[i]['state'] == false) {
-                    p.fill(31,31,31);
-                } else {
-                    p.fill(191,191,191);
-                }
-            } else if(gTree.getLocalPointer()[i][2]['state'] != undefined) {
-                if(gTree.getLocalPointer()[i]['state'] == false) {
-                    p.fill(63,63,63);
-                } else {
-                    p.fill(223,223,223);
-                }
-            }
-            p.rect(0+offsetX,screenHeight-controlSize+smallSquareSize+offsetY,
-                    smallSquareSize,smallSquareSize);
-            if(gTree.getLocalPointer()[i][3]['state'] == false) {
-                if(gTree.getLocalPointer()[i]['state'] == false) {
-                    p.fill(31,31,31);
-                } else {
-                    p.fill(191,191,191);
-                }
-            } else if(gTree.getLocalPointer()[i][3]['state'] != undefined) {
-                if(gTree.getLocalPointer()[i]['state'] == false) {
-                    p.fill(63,63,63);
-                } else {
-                    p.fill(223,223,223);
-                }
-            }
-            p.rect(smallSquareSize+offsetX,screenHeight-controlSize+smallSquareSize+offsetY,
-                    smallSquareSize,smallSquareSize);
+        /* foreground */
+        var offsetY = 0;
+        for(var n=0;n<3;n++) {
+            offsetY = stackWidth*n;
+            p.fill(255,0,0);
+            p.ellipse(screenWidth-stackSquareSize,stackSquareSize+offsetY,stackWidth,stackWidth);
         }
     }
     function drawCircleControl() {
@@ -346,14 +394,14 @@ function innerLoop(p) {
         var smallestCircleCorrX = Math.cos(2*Math.PI/360*smallestCirclePosition)*smallestCircleSize/2;
 
         p.fill(120,0,0)
-        p.ellipse(controlSize+smallCircleSize,screenHeight-smallCircleSize,
-                circleSize,circleSize);
+            p.ellipse(controlSize+smallCircleSize,screenHeight-smallCircleSize,
+                    circleSize,circleSize);
         p.fill(190,0,0)
-        p.ellipse(controlSize+smallCircleSize+smallCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY,
-                smallCircleSize,smallCircleSize);
+            p.ellipse(controlSize+smallCircleSize+smallCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY,
+                    smallCircleSize,smallCircleSize);
         p.fill(255,0,0)
-        p.ellipse(controlSize+smallCircleSize+smallCircleCorrX+smallestCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY+smallestCircleCorrY,
-                smallestCircleSize,smallestCircleSize);
+            p.ellipse(controlSize+smallCircleSize+smallCircleCorrX+smallestCircleCorrX,screenHeight-smallCircleSize+smallCircleCorrY+smallestCircleCorrY,
+                    smallestCircleSize,smallestCircleSize);
 
         smallCirclePosition++;
         smallestCirclePosition += 2;
@@ -375,7 +423,6 @@ function innerLoop(p) {
         innerLoop.releaseY = p.mouseY; 
 
         var pressSector = -1;
-        //var releaseSector = -1;
 
         if(innerLoop.pressX < squareSize) {
             if(innerLoop.pressY > screenHeight-controlSize+squareSize) {
@@ -390,122 +437,106 @@ function innerLoop(p) {
                 pressSector = 1;
             }
         }
-/*
-        if(innerLoop.releaseX < squareSize) {
-            if(innerLoop.releaseY > screenHeight-controlSize+squareSize) {
-                releaseSector = 2;
-            } else if(innerLoop.releaseY > screenHeight-controlSize) {
-                releaseSector = 0;
-            }
-        } else if(innerLoop.releaseX < squareSize*2) {
-            if(innerLoop.releaseY > screenHeight-controlSize+squareSize) {
-                releaseSector = 3;
-            } else if(innerLoop.releaseY > screenHeight-controlSize) {
-                releaseSector = 1;
-            }
-        }
-        */
-
-        var direction = 0;
-        var pressX = innerLoop.pressX;
-        var pressY = innerLoop.pressY;
-        var releaseX = innerLoop.releaseX;
-        var releaseY = innerLoop.releaseY;
-        if(pressSector == 0) {
-            if(pressX-releaseX > 0 && pressY-releaseY > 0) {
-                direction = 1; 
-            } else if(pressX-releaseX < 0 && pressY-releaseY < 0) {
-                direction = -1; 
-            } else {
-                direction = 0;
-            }
-        } else if(pressSector == 1) {
-            if(pressX-releaseX < 0 && pressY-releaseY > 0) {
-                direction = 1; 
-            } else if(pressX-releaseX > 0 && pressY-releaseY < 0) {
-                direction = -1; 
-            } else {
-                direction = 0;
-            }
-        } else if(pressSector == 2) {
-            if(pressX-releaseX > 0 && pressY-releaseY < 0) {
-                direction = 1; 
-            } else if(pressX-releaseX < 0 && pressY-releaseY > 0) {
-                direction = -1; 
-            } else {
-                direction = 0;
-            }
-        } else {
-            if(pressX-releaseX < 0 && pressY-releaseY < 0) {
-                direction = 1; 
-            } else if(pressX-releaseX > 0 && pressY-releaseY > 0) {
-                direction = -1; 
-            } else {
-                direction = 0;
-            }
-        }
-
-        var dist = calcDist(innerLoop.pressX,innerLoop.releaseX,innerLoop.pressY,innerLoop.releaseY);
-        if(dist > 20) {
-            console.log("press " + pressSector + " direction " + direction);
-            if(direction == 1) {
-                gTree.ascend();
-            } else if(direction == -1) {
-                gTree.descend(pressSector); 
-            }
-        } else {
-            console.log("click!");
-            gTree.flipState(pressSector);
-        }
-        console.log("dist " + dist);
     }
-    /*
+
     p.mouseClicked = function() {
-        if(p.mouseX < squareSize) {
-            if(p.mouseY > screenHeight-controlSize+squareSize) {
-                console.log(2);
-                gTree.flipState(2);
-            } else if(p.mouseY > screenHeight-controlSize) {
-                console.log(0);
-                gTree.flipState(0);
+        if(p.mouseX<controlSize && p.mouseY>screenHeight-controlSize) {
+            if(p.mouseX<squareSize) {
+                if(p.mouseY>screenHeight-squareSize) {
+                    gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line2'] = !gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line2'];
+                    console.log("square 3 click");
+                } else {
+                    gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line0'] = !gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line0'];
+                    console.log("square 1 click");
+                }
+            } else {
+                if(p.mouseY>screenHeight-squareSize) {
+                    gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line3'] = !gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line3'];
+                    console.log("square 4 click");
+                } else {
+                    gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line1'] = !gTree.raw[gTreeI][gTreeJ][gTreeK]['state']['line1'];
+                    console.log("square 2 click");
+                }
             }
-        } else if(p.mouseX < squareSize*2) {
-            if(p.mouseY > screenHeight-controlSize+squareSize) {
-                console.log(3);
-                gTree.flipState(3);
-            } else if(p.mouseY > screenHeight-controlSize) {
-                console.log(1);
-                gTree.flipState(1);
+        }
+
+        if(p.mouseX<stackWidth && p.mouseY<screenHeight-controlSize-stackBufferHeight) {
+            if(p.mouseY>screenHeight-controlSize-stackBufferHeight-stackWidth) {
+                if(p.mouseX<stackSquareSize) {
+                    if(p.mouseY>screenHeight-controlSize-stackBufferHeight-stackWidth+stackSquareSize) {
+                        gTreeK = 2;      
+                        console.log("gTreeK = 2");
+                    } else {
+                        gTreeK = 0;      
+                        console.log("gTreeK = 0");
+                    }
+                } else {
+                    if(p.mouseY>screenHeight-controlSize-stackBufferHeight-stackWidth+stackSquareSize) {
+                        gTreeK = 3;
+                        console.log("gTreeK = 3");
+                    } else {
+                        gTreeK = 1;
+                        console.log("gTreeK = 1");
+                    }
+                }
+            } else if(p.mouseY>screenHeight-controlSize-stackBufferHeight-(stackWidth*2)) {
+                if(p.mouseX<stackSquareSize) {
+                    if(p.mouseY>screenHeight-controlSize-stackBufferHeight-(stackWidth*2)+stackSquareSize) {
+                        gTreeJ = 2;
+                        console.log("gTreeJ = 2");
+                    } else {
+                        gTreeJ = 0;
+                        console.log("gTreeJ = 0");
+                    }
+                } else {
+                    if(p.mouseY>screenHeight-controlSize-stackBufferHeight-(stackWidth*2)+stackSquareSize) {
+                        gTreeJ = 3;
+                        console.log("gTreeJ = 3");
+                    } else {
+                        gTreeJ = 1;
+                        console.log("gTreeJ = 1");
+                    }
+                }
+            } else {
+                if(p.mouseX<stackSquareSize) {
+                    if(p.mouseY>screenHeight-controlSize-stackBufferHeight-(stackWidth*3)+stackSquareSize) {
+                        gTreeI = 2;
+                        console.log("gTreeI = 2");
+                    } else {
+                        gTreeI = 0;
+                        console.log("gTreeI = 0");
+                    }
+                } else {
+                    if(p.mouseY>screenHeight-controlSize-stackBufferHeight-(stackWidth*3)+stackSquareSize) {
+                        gTreeI = 3;
+                        console.log("gTreeI = 3");
+                    } else {
+                        gTreeI = 1;
+                        console.log("gTreeI = 1");
+                    }
+                }
             }
         }
     };
-    */
     p.draw = function() {
+        p.background(0);
         drawSquareStack();
         drawSquareControl();
+        drawCircleStack();
         drawCircleControl();
         /*
-        if(!initialized) {
-            initialized = true;
-            p.noLoop();
-        }
-        */
+           if(!initialized) {
+           initialized = true;
+           p.noLoop();
+           }
+         */
     };
     p.setup = function() {
-        //p.println(p.PFont.list());
         p.size(screenWidth,screenHeight);
         var font = p.loadFont("monospace");
         p.textFont(font);
         p.background(0);
-	};
+    };
 }
-      /*
-      $.couch.app(function(app) {
-      $("#account").evently("account", app);
-      $("#profile").evently("profile", app);
-      $.evently.connect("#account","#profile", ["loggedIn","loggedOut"]);
-      $("#items").evently("items", app);
-      });
-      */
-  </script>
+</script>
 </html>
